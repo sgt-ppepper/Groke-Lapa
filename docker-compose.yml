@@ -10,7 +10,6 @@ services:
       - DATA_DIR=/data
     volumes:
       - ./data:/data
-      - chroma_data:/data/chroma_db
     depends_on:
       - phoenix
     networks:
@@ -26,7 +25,6 @@ services:
       - mriia-network
 
 volumes:
-  chroma_data:
   phoenix_data:
 
 networks:
