@@ -92,11 +92,17 @@ class TutorState(TypedDict, total=False):
     control_questions: List[str]
     
     # === Practice Generation ===
+    topic: Optional[str]
+    subtopics: Optional[List[str]]
+    student_level: Optional[str]
+    practice_recommendations: Optional[str]
+    practice_count: Optional[int]
     practice_questions: List[dict]  # List of Question as dict
     
     # === Validation (Self-check) ===
     validation_results: List[dict]
     validation_passed: bool
+    validation_feedback: Optional[str]
     regeneration_count: int
     
     # === Student Answers (if provided) ===
@@ -142,9 +148,15 @@ def create_initial_state(
         student_profile=None,
         lecture_content="",
         control_questions=[],
+        topic=None,
+        subtopics=None,
+        student_level=None,
+        practice_recommendations=None,
+        practice_count=None,
         practice_questions=[],
         validation_results=[],
         validation_passed=False,
+        validation_feedback=None,
         regeneration_count=0,
         student_answers=None,
         evaluation_results=None,
