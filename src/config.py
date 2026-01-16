@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "./chroma_db"
     
     # Data paths
-    data_dir: str = "./data"
+    data_dir: str = "Groke-Lapa/Lapathon2026_Mriia_public_files"
     
     # API Settings
     api_host: str = "0.0.0.0"
@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     debug: bool = False
     
     class Config:
-        env_file = ".env"
+        # Look for .env file in the project root (Groke-Lapa directory)
+        env_file = str(Path(__file__).parent.parent / ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
     

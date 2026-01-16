@@ -96,7 +96,7 @@ Groke-Lapa/
 │   │   ├── lapa.py       # Lapa LLM
 │   │   ├── mamay.py      # MamayLM
 │   │   └── embeddings.py # Qwen embeddings
-│   ├── data/             # Data loaders (TODO)
+│   ├── Lapathon2026_Mriia_public_files/  # Data files
 │   └── benchmark/        # Benchmark solver (TODO)
 ├── docker-compose.yml
 ├── Dockerfile
@@ -110,7 +110,7 @@ Groke-Lapa/
 | `LAPATHON_API_KEY` | API key for LLMs | required |
 | `PHOENIX_COLLECTOR_ENDPOINT` | Phoenix collector URL | http://localhost:6006/v1/traces |
 | `CHROMA_PERSIST_DIR` | ChromaDB storage path | ./chroma_db |
-| `DATA_DIR` | Path to parquet files | ./data |
+| `DATA_DIR` | Path to parquet files | Groke-Lapa/Lapathon2026_Mriia_public_files |
 
 ## 📊 Tracing
 
