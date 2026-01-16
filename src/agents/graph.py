@@ -9,6 +9,18 @@ from typing import Literal
 from langgraph.graph import StateGraph, START, END
 
 from .state import TutorState
+from .topic_router import TopicRouter, get_discipline_id
+
+# Initialize TopicRouter instance (singleton pattern)
+_router_instance: TopicRouter = None
+
+
+def get_topic_router() -> TopicRouter:
+    """Get or create TopicRouter instance."""
+    global _router_instance
+    if _router_instance is None:
+        _router_instance = TopicRouter()
+    return _router_instance
 
 
 # === Node Functions (Placeholder implementations) ===
@@ -18,10 +30,52 @@ def topic_router(state: TutorState) -> TutorState:
     """Route teacher query to relevant topics from TOC.
     
     Uses MamayLM or embedding similarity to find matching topics.
+    Grade and subject are inferred from the query if not provided.
     """
-    # TODO: Implement with actual topic routing logic
-    # For now, return state unchanged
-    print(f"[Topic Router] Processing query: {state.get('teacher_query', '')[:50]}...")
+    try:
+        router = get_topic_router()
+        query = state.get("teacher_query", "")
+        
+        # Get grade and subject from state if available, otherwise infer
+        grade = state.get("grade")
+        subject = state.get("subject")
+        discipline_id = None
+        
+        if subject:
+            # Get discipline ID from subject name if provided
+            discipline_id = get_discipline_id(subject)
+        
+        # Route the query - will infer grade/subject if not provided
+        result = router.route(
+            query=query,
+            grade=grade,
+            discipline_id=discipline_id,
+            top_k=5
+        )
+        
+        # Update state with inferred values if they were missing
+        if not state.get("grade") and result.get("grade"):
+            state["grade"] = result["grade"]
+        if not state.get("subject") and result.get("subject"):
+            state["subject"] = result["subject"]
+        
+        # Store results in state
+        state["matched_topics"] = [{
+            "topic": result["topic"],
+            "retrieved_docs": result["retrieved_docs"],
+            "grade": result.get("grade"),
+            "subject": result.get("subject")
+        }]
+        
+        print(f"[Topic Router] Matched topic: {result['topic']}")
+        print(f"[Topic Router] Inferred grade: {result.get('grade')}, subject: {result.get('subject')}")
+        print(f"[Topic Router] Retrieved {len(result['retrieved_docs'])} documents")
+        
+    except Exception as e:
+        print(f"[Topic Router] Error: {e}")
+        state["error"] = f"Topic routing failed: {str(e)}"
+        state["matched_topics"] = []
+    
     return state
 
 
