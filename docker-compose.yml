@@ -1,0 +1,34 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LAPATHON_API_KEY=${LAPATHON_API_KEY}
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
+      - CHROMA_PERSIST_DIR=/data/chroma_db
+      - DATA_DIR=/data
+    volumes:
+      - ./data:/data
+      - chroma_data:/data/chroma_db
+    depends_on:
+      - phoenix
+    networks:
+      - mriia-network
+
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"
+    volumes:
+      - phoenix_data:/phoenix_data
+    networks:
+      - mriia-network
+
+volumes:
+  chroma_data:
+  phoenix_data:
+
+networks:
+  mriia-network:
+    driver: bridge
