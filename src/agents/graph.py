@@ -9,6 +9,7 @@ from typing import Literal
 from langgraph.graph import StateGraph, START, END
 
 from .state import TutorState
+from .content_generator import content_generator_node
 
 
 # === Node Functions (Placeholder implementations) ===
@@ -53,6 +54,12 @@ def content_generator(state: TutorState) -> TutorState:
     """
     # TODO: Implement with LapaLLM
     print("[Content Generator] Generating lecture content...")
+    
+    lecture, questions, sources = content_generator_node(state)
+    state["lecture_content"] = lecture
+    state["control_questions"] = questions
+    state["sources"] = sources  
+    
     return state
 
 

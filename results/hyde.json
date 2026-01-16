@@ -1,0 +1,587 @@
+{
+  "results": [
+    {
+      "question_id": "d8c6588a-dbf4-46f5-b82e-51d0d480e481",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "\\(23\\)",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "1dd3b2e4-98cb-4921-a9fa-24abb3c9f7d8",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "тире",
+      "correct_answer_index": 2,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "947ed39a-80ff-4481-9314-7d4617c0ba77",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "узбек, Бахмач, латиш",
+      "correct_answer_index": 1,
+      "is_correct": 0,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "da82036a-983a-47e2-9160-bf0807c36a67",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "Ти тут живеш зовсім сама? — запитав Томмі.",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "bf758fc4-0620-405c-9b50-6fadf1868a0b",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "На світі у кожного сонце своє; любенько живеться, як сонечко є (В. Александров).",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "879fa57a-f06b-47d6-9370-99a8be025867",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "перехід до фабричного виробництва в провідних галузях промисловості",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "c60a89c9-cad6-4eca-8808-e292a29d3433",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Ніч запропонувала дивну забаву – змусила мільйон зірок шукати собі на землі люстерко (Люко Дашвар).",
+      "correct_answer_index": 2,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "48c70b0a-c712-4c27-ad2c-01fd4bd61af9",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "«Театр корифеїв»",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "c26de70f-3495-416b-a2d2-70e6703d1aae",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "\\((x-4)^2-18\\)",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "833eda18-b7f8-45c3-9e67-df21da7bba84",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "Мені годі думати про порятунок.",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "83c90951-fec0-4d1d-ab68-b3df91b5cffa",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "п’ять",
+      "correct_answer_index": 1,
+      "is_correct": 0,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "1d1c3289-a14d-4990-8a0e-ce99682b5a91",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "\\((−∞; 3)\\) та \\((3;+∞)\\)",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "26b07ecf-dfa9-4093-8ab1-9d6019ee03f7",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "1772 р.",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "2c4e0c8a-0f08-402b-b9df-c3d8a30a6b40",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Гаряче сонце заглянуло під грушу, обсипало вогнем білу сорочку, чорняве лице.",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "23eadb30-1e87-4484-886a-db3c6cf8868c",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "Де нема любові і страждання, там не живе, не б'ється і життя…             (О. Олесь).",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "6838f785-33b2-400f-8bf1-630b2498b292",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "Земелька стогне … дощі забарились (Т. Приймалюк).",
+      "correct_answer_index": 1,
+      "is_correct": 0,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "17a53f99-9412-493c-ad99-0538aaff7f3d",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Миколу Левитського",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "4afc6755-e3f1-4135-bb32-6cdd20843232",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "І. Шраг",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "9dad9dee-80f0-4e9f-b9f1-f08c8a2a02b0",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "1775 р.",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "29976119-6d4f-4d1a-afdd-0b03d91cdade",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "сурядний протиставний",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "7ee81067-e5fb-436b-bcb8-484a8733779d",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Московією та Річчю Посполитою",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "2eb44735-dcf9-4bc3-ac9b-114a324b5bc9",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "\\(S_n=\\frac{b_{n+1}-b_1}{q-1}\\)",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "0c40b757-f992-4b82-9791-9953750d5bca",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "\\(-42<-7a<77\\)",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "2966ef8f-c873-45cc-ba2c-5eec1407bc38",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "\\(- \\frac{5}{4}\\)",
+      "correct_answer_index": 2,
+      "is_correct": 0,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "0b09a2b9-faae-458f-af07-a8a46526880a",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "основними видами складнопідрядних речень є з'ясувальні, означальні, обставинні.",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "bd7f90d9-93fa-4933-bc50-3e816e08bac8",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "\\(- 6; 1 \\)",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "16d6507a-40fd-4fd6-b048-690bdcdff0a1",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "\\([−1, 3]\\)",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "1ade34d9-f459-4d25-af60-eb142dde0f2f",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Задзвонили в усі дзвони по всій Україні.",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "75abb50b-4c19-4998-b031-b7661e90833d",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Це моя мрія – розпочати свою справу.",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "8eab508e-3ca3-4256-a40b-27cba251e8e8",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "\\(6 \\)",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "d89ac211-1021-48cc-bea4-917f28f20b31",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "Хатинка аж ніяк не була розрахована на стількох людей, і жилося їм там страшенно незручно.",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "e288b6aa-ba02-4ed1-a2a7-157950ef0c2f",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "пташині зграї, відповідно до постанови",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "1dd7923a-0a63-4f30-8c5b-31e14013855d",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "не ставиться розділовий знак перед сполучниками і, й, та(=і), або, чи, якщо частини складносурядного речення мають спільний другорядний член речення",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "a2fde75e-bc62-49c0-86cc-ec20b864abec",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "воєводства",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "bd1ef72b-2ecc-4161-914b-2d9240e81fcb",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "за якої умови?",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "d4c5cefe-4dc7-45f2-9096-1538f5aecc73",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "20 000",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "ecb0cacd-f1a8-4510-ac47-21844444d4de",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "\\((-∞, 1\\frac{5}{7})\\)",
+      "correct_answer_index": 1,
+      "is_correct": 0,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "f2619fbf-7e14-493a-a2ea-38d05d945a9e",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "способи об’єднання слів у словосполученні й реченні, будову словосполучень і речень",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "36f244f5-75c0-4e6c-b47c-9a2a6a88f4c4",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Важкий грузовик помаленьку, мляво сунувся по шосе.",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "1f515ef2-7680-439b-baf1-28fac483aa8d",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "Тітонька Мардж почала потроху освоюватися, а Гаррі не сумував за життям без неї в будинку номер чотири.",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "4219882a-11a5-4d12-a319-aef44197bbea",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "\\(\\frac{ 1}{8}\\)",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "6b2e1321-a1be-431d-aad7-f372291242ac",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Відчинивши двері, на мене дмухнув морозний вітер.",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "85e6740b-73ba-44bd-99dd-587603d887ea",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "зненацька, недоречно",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "ba3175a9-fda5-4b1f-b6b4-d5d8d8923396",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "кома",
+      "correct_answer_index": 2,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "12667dfd-a7d5-4272-934d-7718dadbd0cf",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "В.  визнання Православної церкви та легалізація вищої ієрархії «Пунктами для заспокоєння руського народу»",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "7b355912-4160-46aa-841c-c6e670d8c779",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "збільшення розмірів старшинських землеволодінь",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "67ee598d-7509-40db-83e8-32dd27dc706f",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "\\( 24\\)",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "70d15a7b-3b05-4374-acaf-5c1d56c648ea",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "тире",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "70d35f17-d483-406f-9fbe-ac1048412e1e",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "3",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "ff2fd7c8-c430-4589-8494-76d5d20edebf",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "\\([3, +∞]\\)",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "efd0607c-e6bf-4963-b4fd-f9515d16f0e4",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "Російської імперії",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "4cbdc942-bc3d-48dd-ab0e-dd5853cd05a5",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "\\(a\\neq 5\\), \\(a\\neq 3\\), \\(a\\neq -3\\)",
+      "correct_answer_index": 3,
+      "is_correct": 1,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "da0be4bf-2fb9-494a-b5cc-4c85dd687984",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "\\(0,9\\sqrt{2} \\)",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "3e1901f6-2fc9-4e81-a300-39e3c17f9c8c",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "слова, їхнє значення, походження й уживання",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "87d7356d-3c4d-4ed2-8e2c-5b0ca28c0d2d",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "Східній Галичині",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "ae59c81c-58c8-4466-8cc9-4a4a1b43e4d4",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "виступали за політизацію національно-визвольної боротьби",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "020c74d2-c6f5-42dc-a93b-f72dd97fde44",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "Ти до мене прийшла не із казки чи сну, і здалося мені, що стрічаю весну (В. Симоненко).",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "7507fa83-4883-4823-83b3-ec2d187e33de",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Україна  в усній народній творчості давно оспівана як хлібний край.",
+      "correct_answer_index": 2,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "e06b940a-5147-4509-8054-a9eea7331c31",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "\\(−1; 18\\)",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "78cb9044-8a12-4f4a-bf4e-a8af259b1b95",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "хоч і маю мало вільного часу.",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "33fc65db-30c4-4ae0-ac5c-e877fa2b17b1",
+      "predicted_answer_index": 3,
+      "predicted_answer_text": "обставина",
+      "correct_answer_index": 1,
+      "is_correct": 0,
+      "reasoning": "Answer: D"
+    },
+    {
+      "question_id": "78f1c653-6fdb-4819-acfc-4fe964b757b3",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Ми рушили до будинку, що виднівся на околиці села.",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "b709f8aa-ec23-43d4-b4c6-c77c06892ca0",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Правди не сховаєш.",
+      "correct_answer_index": 2,
+      "is_correct": 0,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "2c72e5f8-92ff-45ff-ab79-8cd711e2365e",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "\\(y=\\frac{8}{x} + 6\\)",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "7b8c838d-7a51-4532-8661-2234f54b07cc",
+      "predicted_answer_index": 0,
+      "predicted_answer_text": "селянство",
+      "correct_answer_index": null,
+      "is_correct": null,
+      "reasoning": "Answer: A"
+    },
+    {
+      "question_id": "5cbc8fe3-e6cd-4e61-8d0a-11213303bf12",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "хоч, хай, дарма що",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "44ca123f-897e-4e68-93bb-60eabbe94cf0",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "\\(6!\\)",
+      "correct_answer_index": 2,
+      "is_correct": 1,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "77949ba9-c8cb-4678-9b92-aef95ff9bf13",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "тире",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: C"
+    },
+    {
+      "question_id": "5412706a-dfdd-43a4-a08d-03f889fc96bb",
+      "predicted_answer_index": 1,
+      "predicted_answer_text": "Полтавська, Чернігівська, Харківська",
+      "correct_answer_index": 1,
+      "is_correct": 1,
+      "reasoning": "Answer: B"
+    },
+    {
+      "question_id": "8b468826-8df1-4db7-98e0-67490fe424bb",
+      "predicted_answer_index": 2,
+      "predicted_answer_text": "Вже почалось, мабуть, майбутнє, оце либонь, вже почалось.",
+      "correct_answer_index": 3,
+      "is_correct": 0,
+      "reasoning": "Answer: C"
+    }
+  ],
+  "total_questions": 70,
+  "metrics": {
+    "accuracy": 0.5714285714285714,
+    "correct": 40,
+    "total": 70,
+    "by_subject": {
+      "Алгебра": {
+        "correct": 12,
+        "total": 19,
+        "accuracy": 0.631578947368421
+      },
+      "Українська мова": {
+        "correct": 16,
+        "total": 34,
+        "accuracy": 0.47058823529411764
+      },
+      "Історія України": {
+        "correct": 12,
+        "total": 17,
+        "accuracy": 0.7058823529411765
+      }
+    }
+  }
+}

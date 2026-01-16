@@ -57,7 +57,8 @@ class MamayLLM:
         self,
         question_text: str,
         answers: List[str],
-        subject: str = "Загальний"
+        subject: str = "Загальний",
+        concise: bool = False
     ) -> dict:
         """Solve a multiple-choice question.
         
@@ -65,41 +66,62 @@ class MamayLLM:
             question_text: The question text
             answers: List of answer options
             subject: Subject name for context
+            concise: If True, output only the answer letter (faster, fewer tokens)
             
         Returns:
             Dict with 'answer_index', 'answer_text', and 'reasoning'
         """
         options = "\n".join([f"{chr(65+i)}. {a}" for i, a in enumerate(answers)])
         
-        prompt = f"""Предмет: {subject}
+        if concise:
+            # Concise mode: prime model to think, but only output letter
+            prompt = f"""Предмет: {subject}
 
 Питання: {question_text}
 
 Варіанти відповіді:
 {options}
 
+Використай наданий контекст з підручників. Проаналізуй кожен варіант, визнач правильну відповідь.
+Виведи ТІЛЬКИ одну літеру (A, B, C або D):"""
+            response = self.generate(prompt, temperature=0.0, max_tokens=50)
+            
+            # Parse single letter response
+            answer_letter = None
+            for char in response.strip():
+                if char.upper() in 'ABCD':
+                    answer_letter = char.upper()
+                    break
+        else:
+            # Full reasoning mode
+            prompt = f"""Предмет: {subject}
+
+Питання: {question_text}
+
+Варіанти відповіді:
+{options}
+
+Використай наданий контекст з підручників для відповіді.
 Розв'яжи це питання крок за кроком, потім дай фінальну відповідь у форматі:
 ВІДПОВІДЬ: [літера]"""
-
-        response = self.generate(prompt, temperature=0.1)
-        
-        # Parse answer
-        answer_letter = None
-        for line in response.split('\n'):
-            if 'ВІДПОВІДЬ:' in line.upper():
-                # Extract letter
-                for char in line:
-                    if char.upper() in 'ABCD':
-                        answer_letter = char.upper()
-                        break
-                break
+            response = self.generate(prompt, temperature=0.1)
+            
+            # Parse answer from reasoning
+            answer_letter = None
+            for line in response.split('\n'):
+                if 'ВІДПОВІДЬ:' in line.upper():
+                    for char in line:
+                        if char.upper() in 'ABCD':
+                            answer_letter = char.upper()
+                            break
+                    break
         
         answer_index = ord(answer_letter) - ord('A') if answer_letter else 0
         
         return {
             "answer_index": answer_index,
             "answer_text": answers[answer_index] if answer_index < len(answers) else "",
-            "reasoning": response
+            "reasoning": response if not concise else f"Answer: {answer_letter}"
         }
     
     def generate_practice(
