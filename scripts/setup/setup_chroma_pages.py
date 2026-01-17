@@ -65,31 +65,35 @@ def main():
     # Check if parquet file exists - try multiple locations
     pages_path = settings.pages_parquet_path
     
-    # If relative path doesn't exist, try relative to script location
+    # If relative path doesn't exist, try relative to script location and other common paths
     if not pages_path.exists():
         script_dir = Path(__file__).parent
-        # Try relative to script directory (Groke-Lapa/)
-        alt_path = script_dir / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "pages_for_hackathon.parquet"
-        if alt_path.exists():
-            pages_path = alt_path
-            print(f"   Found data file at: {pages_path}")
-        else:
-            # Try absolute path from workspace root
-            workspace_root = script_dir.parent
-            alt_path2 = workspace_root / "Groke-Lapa" / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "pages_for_hackathon.parquet"
-            if alt_path2.exists():
-                pages_path = alt_path2
+        # Try multiple alternative paths (order matters - try most likely first)
+        alt_paths = [
+            Path("/app/Lapathon2026_Mriia_public_files/text-embedding-qwen/pages_for_hackathon.parquet"),
+            Path("/app") / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "pages_for_hackathon.parquet",
+            script_dir / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "pages_for_hackathon.parquet",
+            script_dir.parent / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "pages_for_hackathon.parquet",
+        ]
+        
+        found = False
+        for alt_path in alt_paths:
+            if alt_path.exists():
+                pages_path = alt_path
                 print(f"   Found data file at: {pages_path}")
-            else:
-                print(f"❌ Error: Pages parquet file not found at:")
-                print(f"   - {settings.pages_parquet_path}")
-                print(f"   - {alt_path}")
-                print(f"   - {alt_path2}")
-                print(f"\n   Please ensure the data files are in one of these locations:")
-                print(f"   - {Path(settings.data_dir).resolve()}/text-embedding-qwen/")
-                print(f"   - {script_dir}/Lapathon2026_Mriia_public_files/text-embedding-qwen/")
-                print(f"   - {workspace_root}/Groke-Lapa/Lapathon2026_Mriia_public_files/text-embedding-qwen/")
-                sys.exit(1)
+                found = True
+                break
+        
+        if not found:
+            print(f"❌ Error: Pages parquet file not found at:")
+            print(f"   - {settings.pages_parquet_path}")
+            for alt_path in alt_paths:
+                exists = "✓" if alt_path.exists() else "✗"
+                print(f"   {exists} {alt_path}")
+            print(f"\n   Please ensure the data files are in one of these locations:")
+            print(f"   - {Path(settings.data_dir).resolve()}/text-embedding-qwen/")
+            print(f"   - /app/Lapathon2026_Mriia_public_files/text-embedding-qwen/")
+            sys.exit(1)
     
     print(f"\n1. Loading pages data from: {pages_path}")
     pages_df = pd.read_parquet(pages_path)

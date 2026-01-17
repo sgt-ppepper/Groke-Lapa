@@ -122,20 +122,33 @@ def main():
     # Check if parquet file exists - try multiple locations
     toc_path = settings.toc_parquet_path
     
-    # If relative path doesn't exist, try relative to script location
+    # If relative path doesn't exist, try relative to script location and other common paths
     if not toc_path.exists():
         script_dir = Path(__file__).parent
-        alt_path = script_dir.parent / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "toc_for_hackathon_with_subtopics.parquet"
-        if alt_path.exists():
-            toc_path = alt_path
-            print(f"   Found data file at: {toc_path}")
-        else:
+        # Try multiple alternative paths (order matters - try most likely first)
+        alt_paths = [
+            Path("/app/Lapathon2026_Mriia_public_files/text-embedding-qwen/toc_for_hackathon_with_subtopics.parquet"),
+            Path("/app") / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "toc_for_hackathon_with_subtopics.parquet",
+            script_dir.parent / "Lapathon2026_Mriia_public_files" / "text-embedding-qwen" / "toc_for_hackathon_with_subtopics.parquet",
+        ]
+        
+        found = False
+        for alt_path in alt_paths:
+            if alt_path.exists():
+                toc_path = alt_path
+                print(f"   Found data file at: {toc_path}")
+                found = True
+                break
+        
+        if not found:
             print(f"❌ Error: TOC parquet file not found at:")
             print(f"   - {settings.toc_parquet_path}")
-            print(f"   - {alt_path}")
+            for alt_path in alt_paths:
+                exists = "✓" if alt_path.exists() else "✗"
+                print(f"   {exists} {alt_path}")
             print(f"\n   Please ensure the data files are in one of these locations:")
             print(f"   - {Path(settings.data_dir).resolve()}/text-embedding-qwen/")
-            print(f"   - {script_dir.parent}/Lapathon2026_Mriia_public_files/text-embedding-qwen/")
+            print(f"   - /app/Lapathon2026_Mriia_public_files/text-embedding-qwen/")
             sys.exit(1)
     
     print(f"\n1. Loading TOC data from: {toc_path}")

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "./chroma_db"
     
     # Data paths
-    data_dir: str = "Groke-Lapa/Lapathon2026_Mriia_public_files"
+    data_dir: str = os.getenv("DATA_DIR", "Groke-Lapa/Lapathon2026_Mriia_public_files")
     
     # API Settings
     api_host: str = "0.0.0.0"

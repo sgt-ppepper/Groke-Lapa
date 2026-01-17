@@ -68,13 +68,34 @@ def topic_router(state: TutorState) -> TutorState:
             "topic": result["topic"],
             "retrieved_docs": result["retrieved_docs"],
             "grade": result.get("grade"),
-            "subject": result.get("subject")
+            "subject": result.get("subject"),
+            "discipline_id": result.get("discipline_id"),
+            "book_topic_id": result.get("book_topic_id")  # Store for page retrieval
         }]
         
         print(f"[Topic Router] Matched topic: {result['topic']}")
         print(f"[Topic Router] Inferred grade: {result.get('grade')}, subject: {result.get('subject')}")
         print(f"[Topic Router] Retrieved {len(result['retrieved_docs'])} documents")
         
+    except ValueError as e:
+        # ChromaDB collection not found - continue with fallback
+        error_msg = str(e)
+        if "ChromaDB collection" in error_msg:
+            print(f"[Topic Router] Warning: {error_msg}")
+            print("[Topic Router] Continuing without topic routing - using query directly")
+            # Use query as topic fallback
+            query = state.get("teacher_query", "")
+            state["matched_topics"] = [{
+                "topic": query if query else "Загальна тема",
+                "retrieved_docs": [],
+                "grade": state.get("grade"),
+                "subject": state.get("subject")
+            }]
+            state["error"] = "ChromaDB not initialized - topic routing disabled. Please run: python scripts/setup/setup_chroma_toc.py"
+        else:
+            print(f"[Topic Router] Error: {e}")
+            state["error"] = f"Topic routing failed: {str(e)}"
+            state["matched_topics"] = []
     except Exception as e:
         print(f"[Topic Router] Error: {e}")
         state["error"] = f"Topic routing failed: {str(e)}"
@@ -86,10 +107,72 @@ def topic_router(state: TutorState) -> TutorState:
 def context_retriever(state: TutorState) -> TutorState:
     """Retrieve relevant pages from knowledge base.
     
-    Uses ChromaDB with Qwen embeddings for semantic search.
+    Uses ChromaDB pages collection to get actual textbook pages.
     """
-    # TODO: Implement with actual ChromaDB retrieval
-    print(f"[Context Retriever] Finding pages for {len(state.get('matched_topics', []))} topics...")
+    matched_topics = state.get("matched_topics", [])
+    print(f"[Context Retriever] Finding pages for {len(matched_topics)} topics...")
+    
+    # If no topics matched, we can't retrieve context
+    if not matched_topics or len(matched_topics) == 0:
+        print("[Context Retriever] No topics matched - skipping context retrieval")
+        state["matched_pages"] = []
+        return state
+    
+    try:
+        router = get_topic_router()
+        
+        # Retrieve pages for each matched topic
+        all_pages = []
+        for topic_data in matched_topics:
+            topic_name = topic_data.get("topic", "")
+            grade = topic_data.get("grade")
+            discipline_id = topic_data.get("discipline_id")
+            book_topic_id = topic_data.get("book_topic_id")
+            
+            pages_retrieved = False
+            
+            # Retrieve pages using book_topic_id if available
+            if book_topic_id and router.pages_collection:
+                try:
+                    pages = router._retrieve_pages_for_topic(
+                        book_topic_id=book_topic_id,
+                        grade=grade,
+                        discipline_id=discipline_id,
+                        max_pages=10  # Get more pages for better context
+                    )
+                    if pages:
+                        all_pages.extend(pages)
+                        pages_retrieved = True
+                        print(f"[Context Retriever] Retrieved {len(pages)} pages for topic '{topic_name}' (book_topic_id: {book_topic_id})")
+                except Exception as e:
+                    print(f"[Context Retriever] Warning: Failed to retrieve pages for book_topic_id {book_topic_id}: {e}")
+            
+            # Fallback: use retrieved_docs from topic_router if no pages were retrieved for this topic
+            if not pages_retrieved:
+                retrieved_docs = topic_data.get("retrieved_docs", [])
+                if retrieved_docs:
+                    all_pages.extend(retrieved_docs)
+                    print(f"[Context Retriever] Using {len(retrieved_docs)} documents from topic router for '{topic_name}'")
+        
+        # Store pages in state (convert strings to dict format)
+        if all_pages:
+            state["matched_pages"] = [{"content": page} for page in all_pages]
+        else:
+            state["matched_pages"] = []
+            
+        print(f"[Context Retriever] Retrieved {len(state['matched_pages'])} total page/document chunks")
+        
+    except Exception as e:
+        print(f"[Context Retriever] Error: {e}")
+        # Fallback to using retrieved_docs from matched_topics
+        matched_pages = []
+        for topic_data in matched_topics:
+            retrieved_docs = topic_data.get("retrieved_docs", [])
+            if retrieved_docs:
+                matched_pages.extend([{"content": doc} for doc in retrieved_docs])
+        state["matched_pages"] = matched_pages
+        print(f"[Context Retriever] Fallback: Using {len(matched_pages)} documents from topic router")
+    
     return state
 
 
@@ -107,10 +190,104 @@ def personalization_engine(state: TutorState) -> TutorState:
 def content_generator(state: TutorState) -> TutorState:
     """Generate lecture content using Lapa LLM.
     
-    Creates structured explanation with control questions.
+    Creates structured explanation based on retrieved textbook pages.
     """
-    # TODO: Implement with LapaLLM
     print("[Content Generator] Generating lecture content...")
+    
+    # Initialize fallback values
+    teacher_query = state.get("teacher_query", "")
+    topic_name = ""
+    matched_topics = state.get("matched_topics", [])
+    if matched_topics:
+        topic_name = matched_topics[0].get("topic", "")
+    
+    # Default fallback content
+    fallback_content = f"# {topic_name or teacher_query or 'Загальна тема'}\n\nКонспект готується на основі матеріалу з підручника.\n\n**Запит:** {teacher_query}"
+    
+    try:
+        from ..llm.lapa import LapaLLM
+        lapa = LapaLLM()
+        
+        # Get context from retrieved pages
+        matched_pages = state.get("matched_pages", [])
+        print(f"[Content Generator] Found {len(matched_pages)} pages for context")
+        
+        # Combine all page content into context
+        context_parts = []
+        for page_data in matched_pages:
+            if isinstance(page_data, dict):
+                content = page_data.get("content", "")
+            else:
+                content = str(page_data)
+            if content:
+                context_parts.append(content)
+        
+        context = "\n\n".join(context_parts)
+        
+        # If no context, use the query itself
+        if not context:
+            context = teacher_query
+            print("[Content Generator] Warning: No pages retrieved, using query as context")
+        
+        # Build prompt for content generation
+        query_text = teacher_query if teacher_query else f"Поясни тему: {topic_name}"
+        
+        system_prompt = """Ти - вчитель, який створює навчальні конспекти для учнів.
+Створи структурований конспект на основі наданого матеріалу з підручника.
+Конспект повинен бути:
+- Зрозумілим для учнів
+- Структурованим (з заголовками та підзаголовками)
+- З прикладами та поясненнями
+- З важливими формулами та визначеннями (у форматі Markdown з LaTeX для формул)
+
+Використовуй Markdown для форматування:
+- # для заголовків
+- ## для підзаголовків
+- **жирний** для важливих термінів
+- $формула$ для інлайн формул
+- $$формула$$ для окремих формул"""
+        
+        print(f"[Content Generator] Calling Lapa LLM with query: {query_text[:100]}...")
+        
+        # Generate content
+        lecture_content = lapa.generate_with_context(
+            query=query_text,
+            context=context,
+            system=system_prompt,
+            temperature=0.7
+        )
+        
+        print(f"[Content Generator] LLM returned {len(lecture_content) if lecture_content else 0} chars")
+        
+        # Ensure we have content (even if empty, set a fallback)
+        if not lecture_content or lecture_content.strip() == "":
+            print("[Content Generator] Warning: Generated content is empty, using fallback")
+            lecture_content = fallback_content
+        else:
+            # Ensure content starts with a heading
+            if not lecture_content.strip().startswith('#'):
+                lecture_content = f"# {topic_name or teacher_query}\n\n{lecture_content}"
+        
+        state["lecture_content"] = lecture_content
+        print(f"[Content Generator] Final lecture content: {len(lecture_content)} chars")
+        print(f"[Content Generator] Content preview: {lecture_content[:100]}...")
+        
+    except Exception as e:
+        import traceback
+        print(f"[Content Generator] Error: {e}")
+        print(f"[Content Generator] Traceback: {traceback.format_exc()}")
+        
+        # Fallback: create simple content from query
+        state["lecture_content"] = fallback_content
+        if not state.get("error"):
+            state["error"] = f"Content generation failed: {str(e)}"
+        print(f"[Content Generator] Using fallback content: {len(fallback_content)} chars")
+    
+    # Final safety check - ensure lecture_content is never empty
+    if not state.get("lecture_content") or state["lecture_content"].strip() == "":
+        print("[Content Generator] CRITICAL: lecture_content is still empty, using emergency fallback")
+        state["lecture_content"] = f"# {teacher_query or 'Загальна тема'}\n\nКонспект готується..."
+    
     return state
 
 
@@ -490,6 +667,25 @@ def response_finalizer(state: TutorState) -> TutorState:
     Compiles all generated content into final output.
     """
     print("[Finalizer] Preparing final response...")
+    
+    # Log what we have in state
+    lecture_content = state.get("lecture_content", "")
+    matched_topics = state.get("matched_topics", [])
+    matched_pages = state.get("matched_pages", [])
+    
+    print(f"[Finalizer] lecture_content length: {len(lecture_content) if lecture_content else 0}")
+    print(f"[Finalizer] matched_topics count: {len(matched_topics)}")
+    print(f"[Finalizer] matched_pages count: {len(matched_pages)}")
+    
+    # Ensure lecture_content exists
+    if not lecture_content or lecture_content.strip() == "":
+        print("[Finalizer] WARNING: lecture_content is empty, setting fallback")
+        teacher_query = state.get("teacher_query", "")
+        topic_name = ""
+        if matched_topics:
+            topic_name = matched_topics[0].get("topic", "")
+        state["lecture_content"] = f"# {topic_name or teacher_query or 'Загальна тема'}\n\nКонспект готується..."
+    
     return state
 
 

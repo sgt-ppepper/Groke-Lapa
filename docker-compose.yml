@@ -10,6 +10,7 @@ services:
       - DATA_DIR=/data
     volumes:
       - ./data:/data
+      - ./Lapathon2026_Mriia_public_files:/app/Lapathon2026_Mriia_public_files
       - chroma_data:/data/chroma_db
     depends_on:
       - phoenix

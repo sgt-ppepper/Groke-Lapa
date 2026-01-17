@@ -15,8 +15,17 @@ class QwenEmbeddings:
     
     def __init__(self):
         settings = get_settings()
+        api_key = settings.lapathon_api_key
+        
+        # Validate API key is set
+        if not api_key or api_key == "":
+            raise ValueError(
+                "LAPATHON_API_KEY is not set. Please create a .env file with your API key. "
+                "Example: LAPATHON_API_KEY=your_key_here"
+            )
+        
         self.client = OpenAI(
-            api_key=settings.lapathon_api_key,
+            api_key=api_key,
             base_url=settings.llm_base_url
         )
         self.model = settings.embedding_model

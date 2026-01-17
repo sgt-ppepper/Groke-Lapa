@@ -63,6 +63,13 @@ class TutorResponse(BaseModel):
     sources: List[str] = []
     recommendations: str = ""
     error: Optional[str] = None
+    # Debug/RAG information
+    matched_topics: List[dict] = Field(default_factory=list)  # RAG extracted topics
+    matched_pages: List[dict] = Field(default_factory=list)  # Retrieved page texts for debugging
+    
+    class Config:
+        # Ensure all fields are included in JSON even if they have default values
+        exclude_unset = False
 
 
 class AnswerCheckResponse(BaseModel):
@@ -122,6 +129,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Optional: Serve static files from frontend build
+# Uncomment to serve frontend from FastAPI
+# from fastapi.staticfiles import StaticFiles
+# from fastapi.responses import FileResponse
+# from pathlib import Path
+# 
+# frontend_build = Path(__file__).parent.parent / "frontend" / "dist"
+# if frontend_build.exists():
+#     app.mount("/static", StaticFiles(directory=str(frontend_build)), name="static")
+#     
+#     @app.get("/{full_path:path}")
+#     async def serve_frontend(full_path: str):
+#         """Serve frontend for all non-API routes."""
+#         if full_path.startswith("api") or full_path.startswith("docs"):
+#             return  # Let FastAPI handle these
+#         file_path = frontend_build / full_path
+#         if file_path.exists() and file_path.is_file():
+#             return FileResponse(str(file_path))
+#         # Serve index.html for SPA routing
+#         return FileResponse(str(frontend_build / "index.html"))
+
 
 # === Endpoints ===
 
@@ -156,13 +184,20 @@ async def process_query(request: TutorRequest):
         # Run the graph
         result = app.state.tutor_graph.invoke(state)
         
+        # Debug: print what we're getting from the graph
+        print(f"[API] lecture_content length: {len(result.get('lecture_content', ''))}")
+        print(f"[API] matched_topics: {result.get('matched_topics', [])}")
+        print(f"[API] matched_pages count: {len(result.get('matched_pages', []))}")
+        
         return TutorResponse(
             lecture_content=result.get("lecture_content", ""),
             control_questions=result.get("control_questions", []),
             practice_questions=result.get("practice_questions", []),
             sources=result.get("sources", []),
             recommendations=result.get("recommendations", ""),
-            error=result.get("error")
+            error=result.get("error"),
+            matched_topics=result.get("matched_topics") or [],
+            matched_pages=result.get("matched_pages") or []
         )
         
     except Exception as e:
@@ -228,6 +263,195 @@ async def solve_benchmark(request: BenchmarkSolveRequest):
         
         return BenchmarkSolveResponse(answers=answers)
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# === Student Endpoints ===
+# Note: /students/list must come before /students/{student_id} to avoid route conflicts
+
+@app.get("/students/list")
+async def list_students(subject: Optional[str] = None, grade: Optional[int] = None):
+    """Get list of available student IDs with basic information.
+    
+    Args:
+        subject: Optional subject filter
+        grade: Optional grade filter
+    """
+    try:
+        import pandas as pd
+        import traceback
+        settings = get_settings()
+        
+        # Check if file exists
+        scores_path = settings.scores_parquet_path
+        if not scores_path.exists():
+            error_msg = f"Parquet file not found: {scores_path}"
+            print(f"❌ Error: {error_msg}")
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        print(f"📂 Loading scores from: {scores_path}")
+        
+        # Load scores data
+        try:
+            scores_df = pd.read_parquet(scores_path)
+            print(f"✓ Loaded {len(scores_df)} records from parquet")
+        except Exception as e:
+            error_msg = f"Failed to read parquet file: {str(e)}"
+            print(f"❌ Error: {error_msg}")
+            print(traceback.format_exc())
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        # Check if required columns exist
+        required_cols = ['student_id', 'score_numeric', 'discipline_name', 'grade']
+        missing_cols = [col for col in required_cols if col not in scores_df.columns]
+        if missing_cols:
+            error_msg = f"Missing required columns: {missing_cols}. Available columns: {list(scores_df.columns)}"
+            print(f"❌ Error: {error_msg}")
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        # Filter by subject and grade if provided
+        if subject:
+            scores_df = scores_df[scores_df['discipline_name'] == subject]
+            print(f"  Filtered by subject '{subject}': {len(scores_df)} records")
+        if grade:
+            scores_df = scores_df[scores_df['grade'] == grade]
+            print(f"  Filtered by grade {grade}: {len(scores_df)} records")
+        
+        # Convert score_numeric to numeric if it's not already
+        scores_df['score_numeric'] = pd.to_numeric(scores_df['score_numeric'], errors='coerce')
+        scores_df = scores_df.dropna(subset=['score_numeric'])
+        
+        # Get unique students with basic stats
+        students_data = []
+        unique_students = scores_df['student_id'].unique()
+        print(f"  Found {len(unique_students)} unique students")
+        
+        for student_id in unique_students:
+            student_scores = scores_df[scores_df['student_id'] == student_id]
+            avg_score = student_scores['score_numeric'].mean()
+            total_lessons = len(student_scores)
+            
+            # Get subjects for this student
+            subjects = student_scores['discipline_name'].unique().tolist()
+            grades = student_scores['grade'].unique().tolist()
+            
+            students_data.append({
+                "student_id": int(student_id),
+                "average_score": round(float(avg_score), 2),
+                "total_lessons": int(total_lessons),
+                "subjects": subjects,
+                "grades": [int(g) for g in grades]
+            })
+        
+        # Sort by student_id
+        students_data.sort(key=lambda x: x['student_id'])
+        
+        print(f"✓ Returning {len(students_data)} students")
+        return {"students": students_data, "total": len(students_data)}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = f"Unexpected error: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ Error in list_students: {error_detail}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/students/{student_id}/info")
+async def get_student_info(
+    student_id: int, 
+    subject: Optional[str] = None
+):
+    """Get detailed information about a specific student.
+    
+    Args:
+        student_id: Student ID
+        subject: Optional subject filter
+    """
+    try:
+        import pandas as pd
+        import traceback
+        settings = get_settings()
+        
+        # Load data with error checking
+        scores_path = settings.scores_parquet_path
+        absences_path = settings.absences_parquet_path
+        
+        if not scores_path.exists():
+            raise HTTPException(status_code=500, detail=f"Scores file not found: {scores_path}")
+        if not absences_path.exists():
+            raise HTTPException(status_code=500, detail=f"Absences file not found: {absences_path}")
+        
+        try:
+            scores_df = pd.read_parquet(scores_path)
+            absences_df = pd.read_parquet(absences_path)
+        except Exception as e:
+            error_msg = f"Failed to read parquet files: {str(e)}"
+            print(f"❌ Error: {error_msg}")
+            print(traceback.format_exc())
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        # Convert score_numeric to numeric
+        scores_df['score_numeric'] = pd.to_numeric(scores_df['score_numeric'], errors='coerce')
+        scores_df = scores_df.dropna(subset=['score_numeric'])
+        
+        # Filter by student_id
+        student_scores = scores_df[scores_df['student_id'] == student_id].copy()
+        student_absences = absences_df[absences_df['student_id'] == student_id].copy()
+        
+        if student_scores.empty:
+            raise HTTPException(status_code=404, detail=f"Student {student_id} not found")
+        
+        # Filter by subject if provided
+        if subject:
+            student_scores = student_scores[student_scores['discipline_name'] == subject]
+            student_absences = student_absences[student_absences['discipline_name'] == subject]
+        
+        # Calculate statistics per subject
+        subjects_info = []
+        for subj in student_scores['discipline_name'].unique():
+            subj_scores = student_scores[student_scores['discipline_name'] == subj]
+            subj_absences = student_absences[student_absences['discipline_name'] == subj]
+            
+            avg_score = subj_scores['score_numeric'].mean()
+            min_score = subj_scores['score_numeric'].min()
+            max_score = subj_scores['score_numeric'].max()
+            
+            # Topic breakdown
+            topic_breakdown = subj_scores.groupby('topic_name')['score_numeric'].mean().round(1).to_dict()
+            weak_topics = [topic for topic, score in topic_breakdown.items() if score < 6]
+            strong_topics = [topic for topic, score in topic_breakdown.items() if score > 9]
+            
+            subjects_info.append({
+                "subject": subj,
+                "average_score": round(float(avg_score), 2),
+                "min_score": float(min_score),
+                "max_score": float(max_score),
+                "total_lessons": int(len(subj_scores)),
+                "total_absences": int(len(subj_absences)),
+                "topic_breakdown": topic_breakdown,
+                "weak_topics": weak_topics,
+                "strong_topics": strong_topics
+            })
+        
+        # Overall statistics
+        overall_avg = student_scores['score_numeric'].mean()
+        total_absences_count = len(student_absences)
+        
+        return {
+            "student_id": student_id,
+            "overall_average_score": round(float(overall_avg), 2),
+            "total_lessons": int(len(student_scores)),
+            "total_absences": total_absences_count,
+            "subjects": subjects_info,
+            "available_subjects": student_scores['discipline_name'].unique().tolist(),
+            "available_grades": [int(g) for g in student_scores['grade'].unique()]
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

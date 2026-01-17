@@ -221,7 +221,8 @@ class TopicRouter:
             "retrieved_docs": retrieved_docs,
             "grade": int(inferred_grade) if inferred_grade else None,
             "subject": subject_name,
-            "discipline_id": int(inferred_discipline_id) if inferred_discipline_id else None
+            "discipline_id": int(inferred_discipline_id) if inferred_discipline_id else None,
+            "book_topic_id": book_topic_id  # Add book_topic_id for page retrieval
         }
     
     def _refine_query_with_mamay(

@@ -16,8 +16,17 @@ class MamayLLM:
     
     def __init__(self):
         settings = get_settings()
+        api_key = settings.lapathon_api_key
+        
+        # Validate API key is set
+        if not api_key or api_key == "":
+            raise ValueError(
+                "LAPATHON_API_KEY is not set. Please create a .env file with your API key. "
+                "Example: LAPATHON_API_KEY=your_key_here"
+            )
+        
         self.client = OpenAI(
-            api_key=settings.lapathon_api_key,
+            api_key=api_key,
             base_url=settings.llm_base_url
         )
         self.model = settings.mamay_model
@@ -40,18 +49,30 @@ class MamayLLM:
         Returns:
             Generated text
         """
-        messages = []
-        if system:
-            messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
-        
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens
-        )
-        return response.choices[0].message.content
+        try:
+            messages = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            error_msg = str(e)
+            # Check if it's an authentication error
+            if "401" in error_msg or "Authentication" in error_msg or "token" in error_msg.lower():
+                api_key_preview = f"{self.client.api_key[:10]}..." if self.client.api_key else "NOT SET"
+                raise ValueError(
+                    f"API Authentication Error: Invalid or missing API key. "
+                    f"Please check your LAPATHON_API_KEY in .env file. "
+                    f"Current key starts with: {api_key_preview}"
+                ) from e
+            raise
     
     def solve_question(
         self,
