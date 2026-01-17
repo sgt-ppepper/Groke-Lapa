@@ -6,6 +6,14 @@ import BenchmarkSolver from './components/BenchmarkSolver'
 import './App.css'
 
 function App() {
+  const handleClearAll = () => {
+    if (window.confirm('Очистити всі дані? Це видалить збережені запити та відповіді.')) {
+      localStorage.removeItem('queryFormData')
+      localStorage.removeItem('queryResponse')
+      window.location.reload()
+    }
+  }
+
   return (
     <Router>
       <div className="app">
@@ -16,6 +24,9 @@ function App() {
               <Link to="/" className="nav-link">Запит</Link>
               <Link to="/check-answers" className="nav-link">Перевірка відповідей</Link>
               <Link to="/benchmark" className="nav-link">Benchmark</Link>
+              <button onClick={handleClearAll} className="clear-btn" title="Очистити все">
+                🗑️
+              </button>
             </div>
           </div>
         </nav>
@@ -33,3 +44,4 @@ function App() {
 }
 
 export default App
+

@@ -1,242 +1,218 @@
-import React, { useState } from 'react'
-import axios from 'axios'
+import React, { useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import './AnswerCheck.css'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
 const AnswerCheck = () => {
-  const [formData, setFormData] = useState({
-    query: '',
-    grade: 9,
-    subject: 'Українська мова',
-    student_id: '',
-    student_answers: []
-  })
-  
-  const [loading, setLoading] = useState(false)
-  const [response, setResponse] = useState(null)
-  const [error, setError] = useState(null)
-  const [answerInput, setAnswerInput] = useState('')
+  // Load questions from localStorage (saved from QueryForm)
+  const [questions, setQuestions] = useState([])
+  const [userAnswers, setUserAnswers] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+  const [score, setScore] = useState({ correct: 0, total: 0 })
 
-  const subjects = ['Українська мова', 'Алгебра', 'Історія України']
-  const grades = [8, 9]
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setResponse(null)
-
-    try {
-      const payload = {
-        query: formData.query,
-        grade: formData.grade,
-        subject: formData.subject,
-        student_id: formData.student_id ? parseInt(formData.student_id) : null,
-        student_answers: formData.student_answers
+  // Load saved questions when component mounts
+  useEffect(() => {
+    const savedResponse = localStorage.getItem('queryResponse')
+    if (savedResponse) {
+      try {
+        const response = JSON.parse(savedResponse)
+        if (response.practice_questions && response.practice_questions.length > 0) {
+          setQuestions(response.practice_questions)
+          // Initialize empty answers
+          const initialAnswers = {}
+          response.practice_questions.forEach((_, idx) => {
+            initialAnswers[idx] = ''
+          })
+          setUserAnswers(initialAnswers)
+        }
+      } catch (err) {
+        console.error('Error loading questions:', err)
       }
-
-      const res = await axios.post(`${API_BASE}/tutor/check-answers`, payload)
-      setResponse(res.data)
-    } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Помилка при перевірці відповідей')
-      console.error('Error:', err)
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  const handleAnswerSelect = (questionIndex, answerLetter) => {
+    if (submitted) return // Don't allow changes after submission
+    setUserAnswers(prev => ({
       ...prev,
-      [name]: value
+      [questionIndex]: answerLetter
     }))
   }
 
-  const addAnswer = () => {
-    if (answerInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        student_answers: [...prev.student_answers, answerInput.trim()]
-      }))
-      setAnswerInput('')
+  const handleSubmit = () => {
+    if (Object.values(userAnswers).some(a => a === '')) {
+      alert('Будь ласка, дайте відповіді на всі питання')
+      return
     }
+
+    // Calculate score
+    let correct = 0
+    questions.forEach((q, idx) => {
+      if (userAnswers[idx] === q.correct_answer) {
+        correct++
+      }
+    })
+
+    setScore({ correct, total: questions.length })
+    setSubmitted(true)
   }
 
-  const removeAnswer = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      student_answers: prev.student_answers.filter((_, i) => i !== index)
-    }))
+  const handleReset = () => {
+    setSubmitted(false)
+    const resetAnswers = {}
+    questions.forEach((_, idx) => {
+      resetAnswers[idx] = ''
+    })
+    setUserAnswers(resetAnswers)
+    setScore({ correct: 0, total: 0 })
+  }
+
+  const getCardClass = (questionIndex, optionLetter) => {
+    if (!submitted) {
+      return userAnswers[questionIndex] === optionLetter ? 'selected' : ''
+    }
+
+    const correctAnswer = questions[questionIndex].correct_answer
+    const userAnswer = userAnswers[questionIndex]
+
+    if (optionLetter === correctAnswer) {
+      return 'correct'
+    }
+    if (optionLetter === userAnswer && userAnswer !== correctAnswer) {
+      return 'incorrect'
+    }
+    return ''
+  }
+
+  const getQuestionCardClass = (questionIndex) => {
+    if (!submitted) return ''
+
+    const correctAnswer = questions[questionIndex].correct_answer
+    const userAnswer = userAnswers[questionIndex]
+
+    return userAnswer === correctAnswer ? 'card-correct' : 'card-incorrect'
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="answer-check-container">
+        <div className="form-card">
+          <h2>✅ Перевірка відповідей</h2>
+          <div className="empty-state">
+            <div className="empty-icon">📝</div>
+            <h3>Немає питань для перевірки</h3>
+            <p>
+              Спочатку перейдіть на сторінку <strong>"Запит"</strong> та згенеруйте
+              лекційний матеріал з практичними питаннями.
+            </p>
+            <a href="/" className="go-to-query-btn">
+              🚀 Перейти до Запитів
+            </a>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="answer-check-container">
       <div className="form-card">
-        <h2>✅ Перевірка відповідей учня</h2>
+        <h2>✅ Перевірка відповідей</h2>
         <p className="form-description">
-          Введіть запит та відповіді учня для автоматичної перевірки та отримання рекомендацій
+          Оберіть правильні відповіді для кожного питання та натисніть "Перевірити"
         </p>
 
-        <form onSubmit={handleSubmit} className="check-form">
-          <div className="form-group">
-            <label htmlFor="query">Запит *</label>
-            <textarea
-              id="query"
-              name="query"
-              value={formData.query}
-              onChange={handleChange}
-              placeholder="Наприклад: Складні речення та їх ознаки"
-              required
-              rows={4}
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="grade">Клас *</label>
-              <select
-                id="grade"
-                name="grade"
-                value={formData.grade}
-                onChange={handleChange}
-                required
-              >
-                {grades.map(grade => (
-                  <option key={grade} value={grade}>{grade}</option>
-                ))}
-              </select>
+        {submitted && (
+          <div className={`score-panel ${score.correct === score.total ? 'perfect' : score.correct >= score.total / 2 ? 'good' : 'needs-work'}`}>
+            <div className="score-icon">
+              {score.correct === score.total ? '🎉' : score.correct >= score.total / 2 ? '👍' : '📚'}
             </div>
-
-            <div className="form-group">
-              <label htmlFor="subject">Предмет *</label>
-              <select
-                id="subject"
-                name="subject"
-                value={formData.subject}
-                onChange={handleChange}
-                required
-              >
-                {subjects.map(subject => (
-                  <option key={subject} value={subject}>{subject}</option>
-                ))}
-              </select>
+            <div className="score-text">
+              <h3>Результат: {score.correct} / {score.total}</h3>
+              <p>
+                {score.correct === score.total
+                  ? 'Відмінно! Всі відповіді правильні!'
+                  : score.correct >= score.total / 2
+                    ? 'Добре! Але є ще над чим працювати.'
+                    : 'Потрібно повторити матеріал. Не здавайся!'}
+              </p>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="student_id">ID учня (опціонально)</label>
-              <input
-                type="number"
-                id="student_id"
-                name="student_id"
-                value={formData.student_id}
-                onChange={handleChange}
-                placeholder="Для персоналізації"
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Відповіді учня *</label>
-            <div className="answers-input-group">
-              <input
-                type="text"
-                value={answerInput}
-                onChange={(e) => setAnswerInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAnswer())}
-                placeholder="Введіть відповідь і натисніть Enter або кнопку 'Додати'"
-                className="answer-input"
-              />
-              <button
-                type="button"
-                onClick={addAnswer}
-                className="add-btn"
-              >
-                Додати
-              </button>
-            </div>
-            {formData.student_answers.length > 0 && (
-              <div className="answers-list">
-                {formData.student_answers.map((answer, idx) => (
-                  <div key={idx} className="answer-item">
-                    <span className="answer-number">{idx + 1}.</span>
-                    <span className="answer-text">{answer}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeAnswer(idx)}
-                      className="remove-btn"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <button 
-            type="submit" 
-            className="submit-btn"
-            disabled={loading || formData.student_answers.length === 0}
-          >
-            {loading ? '⏳ Перевірка...' : '🔍 Перевірити відповіді'}
-          </button>
-        </form>
-
-        {error && (
-          <div className="error-message">
-            <strong>Помилка:</strong> {error}
+            <button onClick={handleReset} className="reset-btn">
+              🔄 Спробувати ще раз
+            </button>
           </div>
         )}
 
-        {response && (
-          <div className="response-container">
-            <h3>📊 Результати перевірки</h3>
+        <div className="questions-grid">
+          {questions.map((question, qIdx) => (
+            <div key={qIdx} className={`question-card ${getQuestionCardClass(qIdx)}`}>
+              <div className="question-header">
+                <span className="question-number">Питання {qIdx + 1}</span>
+                {submitted && (
+                  <span className={`question-result ${userAnswers[qIdx] === question.correct_answer ? 'correct' : 'incorrect'}`}>
+                    {userAnswers[qIdx] === question.correct_answer ? '✓ Правильно' : '✗ Неправильно'}
+                  </span>
+                )}
+              </div>
 
-            {response.evaluation_results && response.evaluation_results.length > 0 && (
-              <section className="response-section">
-                <h4>Результати оцінювання</h4>
-                <div className="evaluation-results">
-                  {response.evaluation_results.map((result, idx) => (
-                    <div key={idx} className={`evaluation-item ${result.is_correct ? 'correct' : 'incorrect'}`}>
-                      <div className="evaluation-header">
-                        <span className="evaluation-number">Питання {idx + 1}</span>
-                        <span className={`evaluation-status ${result.is_correct ? 'correct' : 'incorrect'}`}>
-                          {result.is_correct ? '✓ Правильно' : '✗ Неправильно'}
-                        </span>
-                      </div>
-                      <div className="evaluation-details">
-                        <p><strong>Відповідь учня:</strong> {result.student_answer}</p>
-                        <p><strong>Правильна відповідь:</strong> {result.correct_answer}</p>
-                        {result.explanation && (
-                          <p className="explanation-text"><strong>Пояснення:</strong> {result.explanation}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              <div className="question-text">
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
+                >
+                  {question.question}
+                </ReactMarkdown>
+              </div>
+
+              <div className="options-grid">
+                {question.options?.map((option, optIdx) => {
+                  const letter = String.fromCharCode(65 + optIdx)
+                  return (
+                    <button
+                      key={optIdx}
+                      className={`option-btn ${getCardClass(qIdx, letter)}`}
+                      onClick={() => handleAnswerSelect(qIdx, letter)}
+                      disabled={submitted}
+                    >
+                      <span className="option-letter">{letter}</span>
+                      <span className="option-text">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                        >
+                          {option}
+                        </ReactMarkdown>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {submitted && userAnswers[qIdx] !== question.correct_answer && question.explanation && (
+                <div className="explanation-box">
+                  <strong>💡 Пояснення:</strong>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {question.explanation}
+                  </ReactMarkdown>
                 </div>
-              </section>
-            )}
+              )}
+            </div>
+          ))}
+        </div>
 
-            {response.recommendations && (
-              <section className="response-section">
-                <h4>💡 Рекомендації</h4>
-                <div className="content-box">{response.recommendations}</div>
-              </section>
-            )}
-
-            {response.next_topics && response.next_topics.length > 0 && (
-              <section className="response-section">
-                <h4>📚 Наступні теми для вивчення</h4>
-                <ul className="topics-list">
-                  {response.next_topics.map((topic, idx) => (
-                    <li key={idx}>{topic}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </div>
+        {!submitted && (
+          <button
+            onClick={handleSubmit}
+            className="submit-btn"
+            disabled={Object.values(userAnswers).some(a => a === '')}
+          >
+            🔍 Перевірити відповіді
+          </button>
         )}
       </div>
     </div>

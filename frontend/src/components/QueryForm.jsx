@@ -11,7 +11,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 // Component for individual practice question with answer reveal
 const PracticeQuestion = ({ question, questionIndex }) => {
   const [showAnswer, setShowAnswer] = useState(false)
-  
+
   return (
     <div className="practice-question">
       <div className="question-number">Питання {questionIndex + 1}</div>
@@ -29,11 +29,11 @@ const PracticeQuestion = ({ question, questionIndex }) => {
           const isCorrect = letter === question.correct_answer
           const showCorrectness = showAnswer && isCorrect
           return (
-            <div 
-              key={optIdx} 
+            <div
+              key={optIdx}
               className={`option ${showCorrectness ? 'correct' : ''}`}
             >
-              <strong>{letter}.</strong> 
+              <strong>{letter}.</strong>
               <ReactMarkdown
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
@@ -68,17 +68,36 @@ const PracticeQuestion = ({ question, questionIndex }) => {
 }
 
 const QueryForm = () => {
-  const [formData, setFormData] = useState({
-    query: '',
-    grade: 9,
-    subject: 'Українська мова',
-    student_id: ''
+  // Load saved form data from localStorage on first render
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('queryFormData')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return { query: '', grade: 9, subject: 'Українська мова', student_id: '' }
+      }
+    }
+    return { query: '', grade: 9, subject: 'Українська мова', student_id: '' }
   })
-  
+
   const [loading, setLoading] = useState(false)
-  const [response, setResponse] = useState(null)
+
+  // Load saved response from localStorage
+  const [response, setResponse] = useState(() => {
+    const saved = localStorage.getItem('queryResponse')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
+
   const [error, setError] = useState(null)
-  
+
   // Student dropdown state
   const [students, setStudents] = useState([])
   const [loadingStudents, setLoadingStudents] = useState(false)
@@ -87,6 +106,18 @@ const QueryForm = () => {
 
   const subjects = ['Українська мова', 'Алгебра', 'Історія України']
   const grades = [8, 9]
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('queryFormData', JSON.stringify(formData))
+  }, [formData])
+
+  // Save response to localStorage whenever it changes
+  useEffect(() => {
+    if (response) {
+      localStorage.setItem('queryResponse', JSON.stringify(response))
+    }
+  }, [response])
 
   // Fetch available students when subject/grade changes
   useEffect(() => {
@@ -270,7 +301,7 @@ const QueryForm = () => {
                       <strong>Пропущено уроків:</strong> {studentInfo.total_absences}
                     </div>
                   </div>
-                  
+
                   {studentInfo.subjects && studentInfo.subjects.length > 0 && (
                     <div className="subject-details">
                       {studentInfo.subjects.map((subject, idx) => (
@@ -287,7 +318,7 @@ const QueryForm = () => {
                               Пропусків: {subject.total_absences}
                             </span>
                           </div>
-                          
+
                           {subject.weak_topics && subject.weak_topics.length > 0 && (
                             <div className="topics-section">
                               <strong className="weak-topics">⚠️ Слабкі теми:</strong>
@@ -298,7 +329,7 @@ const QueryForm = () => {
                               </ul>
                             </div>
                           )}
-                          
+
                           {subject.strong_topics && subject.strong_topics.length > 0 && (
                             <div className="topics-section">
                               <strong className="strong-topics">✅ Сильні теми:</strong>
@@ -318,8 +349,8 @@ const QueryForm = () => {
             </div>
           )}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-btn"
             disabled={loading}
           >
@@ -336,7 +367,7 @@ const QueryForm = () => {
         {response && (
           <div className="response-container">
             <h3>✅ Результат</h3>
-            
+
             {response.error && (
               <div className="error-message">
                 <strong>Помилка:</strong> {response.error}
@@ -359,7 +390,7 @@ const QueryForm = () => {
               </section>
             ) : (
               <section className="response-section">
-                <div className="content-box" style={{color: '#999', fontStyle: 'italic'}}>
+                <div className="content-box" style={{ color: '#999', fontStyle: 'italic' }}>
                   Тема з RAG не знайдена
                 </div>
               </section>
@@ -380,7 +411,7 @@ const QueryForm = () => {
               </section>
             ) : (
               <section className="response-section">
-                <div className="content-box" style={{color: '#999', fontStyle: 'italic'}}>
+                <div className="content-box" style={{ color: '#999', fontStyle: 'italic' }}>
                   Конспект не згенеровано (lecture_content: {response.lecture_content ? `"${response.lecture_content.substring(0, 50)}..."` : 'undefined'})
                 </div>
               </section>

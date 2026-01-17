@@ -27,7 +27,8 @@ class MamayLLM:
         
         self.client = OpenAI(
             api_key=api_key,
-            base_url=settings.llm_base_url
+            base_url=settings.llm_base_url,
+            timeout=120.0  # 2 minute timeout
         )
         self.model = settings.mamay_model
     

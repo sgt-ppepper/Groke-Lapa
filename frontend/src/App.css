@@ -47,6 +47,22 @@
   color: #667eea;
 }
 
+.clear-btn {
+  background: transparent;
+  border: 2px solid #dc3545;
+  color: #dc3545;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.clear-btn:hover {
+  background: #dc3545;
+  color: white;
+}
+
 .main-content {
   max-width: 1200px;
   margin: 2rem auto;

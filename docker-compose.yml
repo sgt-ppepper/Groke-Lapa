@@ -4,6 +4,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - PYTHONUNBUFFERED=1
       - LAPATHON_API_KEY=${LAPATHON_API_KEY}
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
       - CHROMA_PERSIST_DIR=/data/chroma_db
@@ -14,6 +15,15 @@ services:
       - chroma_data:/data/chroma_db
     depends_on:
       - phoenix
+    networks:
+      - mriia-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
     networks:
       - mriia-network
 
@@ -33,3 +43,4 @@ volumes:
 networks:
   mriia-network:
     driver: bridge
+
