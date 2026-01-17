@@ -216,12 +216,25 @@ class TopicRouter:
         inferred_grade = best_topic.get("grade", grade)
         inferred_discipline_id = best_topic.get("global_discipline_id", discipline_id)
         
+        # Build source info for grounding
+        start_page = best_topic.get("book_page_start") or best_topic.get("start_page")
+        end_page = best_topic.get("book_page_end") or best_topic.get("end_page")
+        source_info = {
+            "topic_title": topic_name,
+            "book_id": best_topic.get("book_id"),
+            "start_page": start_page,
+            "end_page": end_page,
+            "subject": subject_name,
+            "grade": inferred_grade
+        }
+        
         return {
             "topic": topic_name,
             "retrieved_docs": retrieved_docs,
             "grade": int(inferred_grade) if inferred_grade else None,
             "subject": subject_name,
-            "discipline_id": int(inferred_discipline_id) if inferred_discipline_id else None
+            "discipline_id": int(inferred_discipline_id) if inferred_discipline_id else None,
+            "source_info": source_info
         }
     
     def _refine_query_with_mamay(

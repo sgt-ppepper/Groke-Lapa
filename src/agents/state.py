@@ -1,67 +1,5 @@
 """Shared state schema for LangGraph workflow."""
-from typing import TypedDict, Optional, List, Literal, Any
-from dataclasses import dataclass, field
-
-
-@dataclass
-class Topic:
-    """Matched topic from TOC."""
-    book_id: str
-    topic_title: str
-    section_title: str
-    topic_text: str
-    subtopics: List[str]
-    grade: int
-    subject: str
-    start_page: Optional[int] = None
-    end_page: Optional[int] = None
-
-
-@dataclass
-class Page:
-    """Retrieved page from knowledge base."""
-    book_id: str
-    page_number: int
-    page_text: str
-    topic_title: str
-    section_title: str
-    subject: str
-    grade: int
-
-
-@dataclass
-class Question:
-    """Generated or benchmark question."""
-    question_id: str
-    question_text: str
-    answers: List[str]
-    correct_answer_index: int
-    subject: str
-    grade: int
-    topic: str
-    difficulty: str = "середня"
-    question_type: str = "single_choice"
-
-
-@dataclass
-class StudentProfile:
-    """Student's performance profile."""
-    student_id: int
-    average_score: float
-    weak_topics: List[str]
-    missed_topics: List[str]
-    total_lessons: int
-    attended_lessons: int
-
-
-@dataclass 
-class EvalResult:
-    """Result of evaluating a student answer."""
-    question_id: str
-    is_correct: bool
-    student_answer: str
-    correct_answer: str
-    explanation: str
+from typing import TypedDict, Optional, List, Literal
 
 
 class TutorState(TypedDict, total=False):
@@ -79,25 +17,22 @@ class TutorState(TypedDict, total=False):
     subject: str  # Українська мова, Алгебра, Історія України
     
     # === Topic Routing ===
-    matched_topics: List[dict]  # List of Topic as dict
-    
-    # === Context Retrieval ===
-    matched_pages: List[dict]  # List of Page as dict
+    # Each topic dict contains: topic, retrieved_docs, grade, subject
+    matched_topics: List[dict]
     
     # === Student Personalization ===
-    student_profile: Optional[dict]  # StudentProfile as dict
+    # Full PersonalizationEngine output: meta, metrics, enrichment, attendance, prompt_injection
+    student_profile: Optional[dict]
     
     # === Generated Content ===
     lecture_content: str
     control_questions: List[str]
     
     # === Practice Generation ===
-    topic: Optional[str]
-    subtopics: Optional[List[str]]
-    student_level: Optional[str]
-    practice_recommendations: Optional[str]
-    practice_count: Optional[int]
-    practice_questions: List[dict]  # List of Question as dict
+    topic: Optional[str]  # Override for explicit topic
+    subtopics: Optional[List[str]]  # Override for explicit subtopics
+    practice_count: Optional[int]  # Number of questions to generate
+    practice_questions: List[dict]  # Each has: question, options, correct_answer, explanation
     
     # === Validation (Self-check) ===
     validation_results: List[dict]
@@ -106,8 +41,8 @@ class TutorState(TypedDict, total=False):
     regeneration_count: int
     
     # === Student Answers (if provided) ===
-    student_answers: Optional[List[str]]
-    evaluation_results: Optional[List[dict]]  # List of EvalResult as dict
+    student_answers: Optional[List[str]]  # ["A", "B", "C", ...]
+    evaluation_results: Optional[List[dict]]  # is_correct, explanation, etc.
     
     # === Recommendations ===
     recommendations: str
@@ -144,14 +79,11 @@ def create_initial_state(
         grade=grade,
         subject=subject,
         matched_topics=[],
-        matched_pages=[],
         student_profile=None,
         lecture_content="",
         control_questions=[],
         topic=None,
         subtopics=None,
-        student_level=None,
-        practice_recommendations=None,
         practice_count=None,
         practice_questions=[],
         validation_results=[],
