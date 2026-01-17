@@ -145,84 +145,56 @@ class TopicRouter:
             include=["documents", "metadatas", "distances"]
         )
         
-        # Step 3: Use Mamay to select the best topic from candidates
+        # Step 3: Select top 3-5 topics (use first 5 from results, sorted by relevance)
+        num_topics_to_use = min(5, max(3, top_k))  # 3-5 topics
+        selected_topics = []
+        
         if results["ids"] and len(results["ids"][0]) > 0:
-            best_topic = self._select_best_topic_with_mamay(
-                query, 
-                results["ids"][0],
-                results["documents"][0],
-                results["metadatas"][0]
-            )
-            
-            # Extract topic name from best match
-            topic_name = best_topic.get("topic_title")
-            if not topic_name:
-                # Fallback: try to extract from first document
-                first_doc = results["documents"][0][0] if results["documents"][0] else ""
-                for line in first_doc.split("\n"):
-                    if line.startswith("TOPIC:"):
-                        topic_name = line.replace("TOPIC:", "").strip()
-                        break
-                if not topic_name:
-                    topic_name = "Невідома тема"
+            # Take top N topics from results (they're already sorted by similarity)
+            for i in range(min(num_topics_to_use, len(results["metadatas"][0]))):
+                meta = results["metadatas"][0][i]
+                topic_info = {
+                    "topic_title": meta.get("topic_title", "Невідома тема"),
+                    "section_title": meta.get("section_title", ""),
+                    "book_topic_id": meta.get("book_topic_id"),
+                    "grade": meta.get("grade", grade),
+                    "global_discipline_id": meta.get("global_discipline_id", discipline_id),
+                    "global_discipline_name": meta.get("global_discipline_name", "Невідомий предмет"),
+                    "document": results["documents"][0][i] if i < len(results["documents"][0]) else ""
+                }
+                selected_topics.append(topic_info)
         else:
             # Fallback if no results
             return {
-                "topic": "",
-                "retrieved_docs": []
+                "topics": [],
+                "grade": grade,
+                "subject": "Невідомий предмет",
+                "discipline_id": discipline_id
             }
         
-        # Step 4: Extract topic_text from the best matching document
-        # The document format is: router_text + "\n\n---TOPIC_CONTENT---\n" + topic_text
-        best_doc_idx = 0
-        for i, meta in enumerate(results["metadatas"][0]):
-            if meta.get("book_topic_id") == best_topic.get("book_topic_id"):
-                best_doc_idx = i
-                break
+        # Get subject name from first topic
+        subject_name = selected_topics[0].get("global_discipline_name", "Невідомий предмет") if selected_topics else "Невідомий предмет"
+        inferred_grade = selected_topics[0].get("grade", grade) if selected_topics else grade
+        inferred_discipline_id = selected_topics[0].get("global_discipline_id", discipline_id) if selected_topics else discipline_id
         
-        best_document = results["documents"][0][best_doc_idx] if best_doc_idx < len(results["documents"][0]) else ""
-        topic_text = self._extract_topic_text_from_doc(best_document)
-        
-        # Step 5: Retrieve page content if topic_text is not available
-        book_topic_id = best_topic.get("book_topic_id")
-        page_content = []
-        
-        # Only query pages if we don't have topic_text
-        if not topic_text and book_topic_id and self.pages_collection:
-            page_content = self._retrieve_pages_for_topic(
-                book_topic_id=book_topic_id,
-                grade=grade,
-                discipline_id=discipline_id,
-                max_pages=top_k
-            )
-        
-        # Step 6: Format output
-        # Priority: topic_text > page_content > document extraction
-        if topic_text:
-            # Split topic_text into chunks for better presentation
-            retrieved_docs = self._format_topic_text(topic_text, top_k)
-        elif page_content:
-            retrieved_docs = page_content
-        else:
-            # Fallback to topic documents
-            retrieved_docs = []
-            for i, doc in enumerate(results["documents"][0][:top_k], 1):
-                # Extract meaningful content from document
-                doc_text = self._extract_doc_content(doc)
-                retrieved_docs.append(f"Документ {i}: {doc_text}")
-        
-        # Get subject name from best match
-        subject_name = best_topic.get("global_discipline_name", "Невідомий предмет")
-        inferred_grade = best_topic.get("grade", grade)
-        inferred_discipline_id = best_topic.get("global_discipline_id", discipline_id)
+        # Format topics for return
+        formatted_topics = []
+        for topic_info in selected_topics:
+            topic_name = topic_info.get("topic_title", "Невідома тема")
+            formatted_topics.append({
+                "topic": topic_name,
+                "section_title": topic_info.get("section_title", ""),
+                "book_topic_id": topic_info.get("book_topic_id"),
+                "grade": int(topic_info.get("grade", grade)) if topic_info.get("grade") else None,
+                "subject": topic_info.get("global_discipline_name", subject_name),
+                "discipline_id": int(topic_info.get("global_discipline_id", discipline_id)) if topic_info.get("global_discipline_id") else None
+            })
         
         return {
-            "topic": topic_name,
-            "retrieved_docs": retrieved_docs,
+            "topics": formatted_topics,  # List of topics instead of single topic
             "grade": int(inferred_grade) if inferred_grade else None,
             "subject": subject_name,
-            "discipline_id": int(inferred_discipline_id) if inferred_discipline_id else None,
-            "book_topic_id": book_topic_id  # Add book_topic_id for page retrieval
+            "discipline_id": int(inferred_discipline_id) if inferred_discipline_id else None
         }
     
     def _refine_query_with_mamay(
@@ -521,9 +493,8 @@ class TopicRouter:
                 page_text = page_data["doc"]
                 page_num = page_data["page_num"]
                 
-                # Limit page text length
-                if len(page_text) > 1000:
-                    page_text = page_text[:1000] + "..."
+                # Don't limit page text length - use full content for better context
+                # Previous limit was 1000 chars, now using full page text
                 
                 retrieved_docs.append(
                     f"Документ {i} (сторінка {page_num}): {page_text}"
