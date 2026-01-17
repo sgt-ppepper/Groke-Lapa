@@ -57,15 +57,15 @@ class BenchmarkSolveRequest(BaseModel):
 
 class TutorResponse(BaseModel):
     """Response from the tutoring endpoint."""
-    lecture_content: str = ""
-    control_questions: List[str] = []
-    practice_questions: List[dict] = []
-    sources: List[str] = []
-    recommendations: str = ""
-    error: Optional[str] = None
+    lecture_content: str = Field(default="", description="Generated lecture content")
+    control_questions: List[str] = Field(default_factory=list, description="Control questions")
+    practice_questions: List[dict] = Field(default_factory=list, description="Practice questions")
+    sources: List[str] = Field(default_factory=list, description="Source references")
+    recommendations: str = Field(default="", description="Learning recommendations")
+    error: Optional[str] = Field(default=None, description="Error message if any")
     # Debug/RAG information
-    matched_topics: List[dict] = Field(default_factory=list)  # RAG extracted topics
-    matched_pages: List[dict] = Field(default_factory=list)  # Retrieved page texts for debugging
+    matched_topics: List[dict] = Field(default_factory=list, description="RAG extracted topics")
+    matched_pages: List[dict] = Field(default_factory=list, description="Retrieved page texts for debugging")
     
     class Config:
         # Ensure all fields are included in JSON even if they have default values
@@ -185,19 +185,45 @@ async def process_query(request: TutorRequest):
         result = app.state.tutor_graph.invoke(state)
         
         # Debug: print what we're getting from the graph
-        print(f"[API] lecture_content length: {len(result.get('lecture_content', ''))}")
-        print(f"[API] matched_topics: {result.get('matched_topics', [])}")
-        print(f"[API] matched_pages count: {len(result.get('matched_pages', []))}")
+        lecture_content = result.get('lecture_content', '')
+        matched_topics = result.get('matched_topics', [])
+        matched_pages = result.get('matched_pages', [])
+        
+        print(f"[API] lecture_content length: {len(lecture_content)}")
+        print(f"[API] lecture_content preview: {lecture_content[:100] if lecture_content else 'EMPTY'}...")
+        print(f"[API] matched_topics count: {len(matched_topics)}")
+        if matched_topics:
+            print(f"[API] matched_topics[0]: {matched_topics[0]}")
+        print(f"[API] matched_pages count: {len(matched_pages)}")
+        import sys
+        sys.stdout.flush()
+        
+        # Ensure all fields are explicitly set, even if empty
+        matched_topics = result.get("matched_topics")
+        if matched_topics is None:
+            matched_topics = []
+        elif not isinstance(matched_topics, list):
+            matched_topics = []
+        
+        matched_pages = result.get("matched_pages")
+        if matched_pages is None:
+            matched_pages = []
+        elif not isinstance(matched_pages, list):
+            matched_pages = []
+        
+        lecture_content = result.get("lecture_content", "")
+        if lecture_content is None:
+            lecture_content = ""
         
         return TutorResponse(
-            lecture_content=result.get("lecture_content", ""),
-            control_questions=result.get("control_questions", []),
-            practice_questions=result.get("practice_questions", []),
-            sources=result.get("sources", []),
-            recommendations=result.get("recommendations", ""),
+            lecture_content=lecture_content,
+            control_questions=result.get("control_questions") or [],
+            practice_questions=result.get("practice_questions") or [],
+            sources=result.get("sources") or [],
+            recommendations=result.get("recommendations") or "",
             error=result.get("error"),
-            matched_topics=result.get("matched_topics") or [],
-            matched_pages=result.get("matched_pages") or []
+            matched_topics=matched_topics,
+            matched_pages=matched_pages
         )
         
     except Exception as e:

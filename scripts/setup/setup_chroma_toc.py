@@ -13,8 +13,9 @@ import pandas as pd
 import chromadb
 from chromadb.config import Settings
 
-# Add src to path (go up two levels from scripts/setup/ to project root)
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+# Add project root to path (go up two levels from scripts/setup/ to project root)
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 from src.config import get_settings
 from src.llm.embeddings import QwenEmbeddings

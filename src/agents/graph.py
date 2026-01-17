@@ -77,6 +77,14 @@ def topic_router(state: TutorState) -> TutorState:
         print(f"[Topic Router] Inferred grade: {result.get('grade')}, subject: {result.get('subject')}")
         print(f"[Topic Router] Retrieved {len(result['retrieved_docs'])} documents")
         
+        # Return new dict to ensure LangGraph properly merges the state
+        return {
+            **state,
+            "matched_topics": state.get("matched_topics", []),
+            "grade": state.get("grade"),
+            "subject": state.get("subject")
+        }
+        
     except ValueError as e:
         # ChromaDB collection not found - continue with fallback
         error_msg = str(e)
@@ -85,23 +93,35 @@ def topic_router(state: TutorState) -> TutorState:
             print("[Topic Router] Continuing without topic routing - using query directly")
             # Use query as topic fallback
             query = state.get("teacher_query", "")
-            state["matched_topics"] = [{
+            matched_topics = [{
                 "topic": query if query else "Загальна тема",
                 "retrieved_docs": [],
                 "grade": state.get("grade"),
                 "subject": state.get("subject")
             }]
-            state["error"] = "ChromaDB not initialized - topic routing disabled. Please run: python scripts/setup/setup_chroma_toc.py"
+            error_msg = "ChromaDB not initialized - topic routing disabled. Please run: python scripts/setup/setup_chroma_toc.py"
         else:
             print(f"[Topic Router] Error: {e}")
-            state["error"] = f"Topic routing failed: {str(e)}"
-            state["matched_topics"] = []
+            error_msg = f"Topic routing failed: {str(e)}"
+            matched_topics = []
+        
+        # Return new dict to ensure LangGraph properly merges the state
+        return {
+            **state,
+            "matched_topics": matched_topics,
+            "error": error_msg
+        }
     except Exception as e:
         print(f"[Topic Router] Error: {e}")
-        state["error"] = f"Topic routing failed: {str(e)}"
-        state["matched_topics"] = []
-    
-    return state
+        error_msg = f"Topic routing failed: {str(e)}"
+        matched_topics = []
+        
+        # Return new dict to ensure LangGraph properly merges the state
+        return {
+            **state,
+            "matched_topics": matched_topics,
+            "error": error_msg
+        }
 
 
 def context_retriever(state: TutorState) -> TutorState:
@@ -192,17 +212,37 @@ def content_generator(state: TutorState) -> TutorState:
     
     Creates structured explanation based on retrieved textbook pages.
     """
+    import sys
+    import traceback
+    
     print("[Content Generator] Generating lecture content...")
+    sys.stdout.flush()
     
     # Initialize fallback values
-    teacher_query = state.get("teacher_query", "")
-    topic_name = ""
-    matched_topics = state.get("matched_topics", [])
-    if matched_topics:
-        topic_name = matched_topics[0].get("topic", "")
-    
-    # Default fallback content
-    fallback_content = f"# {topic_name or teacher_query or 'Загальна тема'}\n\nКонспект готується на основі матеріалу з підручника.\n\n**Запит:** {teacher_query}"
+    try:
+        teacher_query = state.get("teacher_query", "")
+        topic_name = ""
+        matched_topics = state.get("matched_topics", [])
+        if matched_topics:
+            topic_name = matched_topics[0].get("topic", "")
+        
+        print(f"[Content Generator] Topic: {topic_name}, Query: {teacher_query[:50] if teacher_query else 'EMPTY'}")
+        sys.stdout.flush()
+        
+        # Default fallback content
+        fallback_content = f"# {topic_name or teacher_query or 'Загальна тема'}\n\nКонспект готується на основі матеріалу з підручника.\n\n**Запит:** {teacher_query}"
+        
+        # Set fallback immediately to ensure we always have something
+        state["lecture_content"] = fallback_content
+        print(f"[Content Generator] Set initial fallback content")
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"[Content Generator] Error in initialization: {e}")
+        print(f"[Content Generator] Traceback: {traceback.format_exc()}")
+        sys.stdout.flush()
+        teacher_query = state.get("teacher_query", "")
+        state["lecture_content"] = f"# {teacher_query or 'Загальна тема'}\n\nКонспект готується..."
+        return state
     
     try:
         from ..llm.lapa import LapaLLM
@@ -211,6 +251,8 @@ def content_generator(state: TutorState) -> TutorState:
         # Get context from retrieved pages
         matched_pages = state.get("matched_pages", [])
         print(f"[Content Generator] Found {len(matched_pages)} pages for context")
+        import sys
+        sys.stdout.flush()
         
         # Combine all page content into context
         context_parts = []
@@ -248,14 +290,27 @@ def content_generator(state: TutorState) -> TutorState:
 - $$формула$$ для окремих формул"""
         
         print(f"[Content Generator] Calling Lapa LLM with query: {query_text[:100]}...")
+        sys.stdout.flush()
         
         # Generate content
-        lecture_content = lapa.generate_with_context(
-            query=query_text,
-            context=context,
-            system=system_prompt,
-            temperature=0.7
-        )
+        try:
+            lecture_content = lapa.generate_with_context(
+                query=query_text,
+                context=context,
+                system=system_prompt,
+                temperature=0.7
+            )
+            
+            # Handle None response
+            if lecture_content is None:
+                print("[Content Generator] Warning: LLM returned None, using fallback")
+                lecture_content = fallback_content
+        except Exception as llm_error:
+            print(f"[Content Generator] LLM call failed: {llm_error}")
+            import traceback
+            print(f"[Content Generator] LLM error traceback: {traceback.format_exc()}")
+            sys.stdout.flush()
+            lecture_content = fallback_content
         
         print(f"[Content Generator] LLM returned {len(lecture_content) if lecture_content else 0} chars")
         
@@ -271,24 +326,42 @@ def content_generator(state: TutorState) -> TutorState:
         state["lecture_content"] = lecture_content
         print(f"[Content Generator] Final lecture content: {len(lecture_content)} chars")
         print(f"[Content Generator] Content preview: {lecture_content[:100]}...")
+        import sys
+        sys.stdout.flush()
+        print(f"[Content Generator] State after setting: lecture_content in state = {'lecture_content' in state}")
+        sys.stdout.flush()
         
     except Exception as e:
         import traceback
-        print(f"[Content Generator] Error: {e}")
+        import sys
+        print(f"[Content Generator] Error in try block: {e}")
         print(f"[Content Generator] Traceback: {traceback.format_exc()}")
+        sys.stdout.flush()
         
         # Fallback: create simple content from query
         state["lecture_content"] = fallback_content
         if not state.get("error"):
             state["error"] = f"Content generation failed: {str(e)}"
         print(f"[Content Generator] Using fallback content: {len(fallback_content)} chars")
+        sys.stdout.flush()
     
     # Final safety check - ensure lecture_content is never empty
+    import sys
     if not state.get("lecture_content") or state["lecture_content"].strip() == "":
         print("[Content Generator] CRITICAL: lecture_content is still empty, using emergency fallback")
+        sys.stdout.flush()
         state["lecture_content"] = f"# {teacher_query or 'Загальна тема'}\n\nКонспект готується..."
     
-    return state
+    final_content = state.get("lecture_content", "")
+    print(f"[Content Generator] Returning state with lecture_content length: {len(final_content)}")
+    print(f"[Content Generator] Final content preview: {final_content[:100] if final_content else 'EMPTY'}...")
+    sys.stdout.flush()
+    
+    # Return new dict to ensure LangGraph properly merges the state
+    return {
+        **state,
+        "lecture_content": state.get("lecture_content", "")
+    }
 
 
 def parse_practice_questions(text: str) -> List[Dict[str, Any]]:
@@ -676,6 +749,14 @@ def response_finalizer(state: TutorState) -> TutorState:
     print(f"[Finalizer] lecture_content length: {len(lecture_content) if lecture_content else 0}")
     print(f"[Finalizer] matched_topics count: {len(matched_topics)}")
     print(f"[Finalizer] matched_pages count: {len(matched_pages)}")
+    import sys
+    sys.stdout.flush()
+    
+    # Log matched_topics details
+    if matched_topics:
+        for i, topic in enumerate(matched_topics):
+            print(f"[Finalizer] matched_topics[{i}]: {topic.get('topic', 'N/A')}")
+    sys.stdout.flush()
     
     # Ensure lecture_content exists
     if not lecture_content or lecture_content.strip() == "":
@@ -685,8 +766,19 @@ def response_finalizer(state: TutorState) -> TutorState:
         if matched_topics:
             topic_name = matched_topics[0].get("topic", "")
         state["lecture_content"] = f"# {topic_name or teacher_query or 'Загальна тема'}\n\nКонспект готується..."
+        print(f"[Finalizer] Set fallback lecture_content: {len(state['lecture_content'])} chars")
+        sys.stdout.flush()
     
-    return state
+    print(f"[Finalizer] Final state - lecture_content: {len(state.get('lecture_content', ''))} chars, matched_topics: {len(state.get('matched_topics', []))}")
+    sys.stdout.flush()
+    
+    # Return new dict to ensure all fields are properly included
+    return {
+        **state,
+        "lecture_content": state.get("lecture_content", ""),
+        "matched_topics": state.get("matched_topics", []),
+        "matched_pages": state.get("matched_pages", [])
+    }
 
 
 # === Conditional Edges ===

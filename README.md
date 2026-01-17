@@ -24,12 +24,35 @@ AI-powered educational tutor for Ukrainian 8-9 grade students. Built for Lapatho
 
 ## 🚀 How to Run
 
+> 📖 **Детальний гайд з налаштування:** Дивіться [SETUP.md](SETUP.md) для покрокових інструкцій
+
 ### Prerequisites
 
 - Docker and Docker Compose installed
 - Node.js and npm (for frontend development)
 - Python 3.10+ (for local development)
 - API key for Lapathon LLM service
+
+### Quick Start
+
+1. **Створіть `.env` файл з API ключем:**
+   ```env
+   LAPATHON_API_KEY=your_api_key_here
+   ```
+
+2. **Ініціалізуйте ChromaDB:**
+   ```bash
+   docker-compose up -d
+   docker-compose exec api python scripts/setup/setup_chroma_toc.py
+   docker-compose exec api python scripts/setup/setup_chroma_pages.py
+   ```
+
+3. **Запустіть додаток:**
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Відкрийте:** http://localhost:5173 (frontend) або http://localhost:8000/docs (API)
 
 ### Step 1: Setup Environment Variables
 
